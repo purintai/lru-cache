@@ -4,6 +4,7 @@ class LruCache
     def initialize
         @values = {}
         @max_size = 10
+        @mutex = Mutex.new
     end
     
     def get(key)
@@ -17,12 +18,14 @@ class LruCache
     end
     
     def set(key, value)
-        # 新規キーの場合は一番古いキーを削除、キー値更新の場合は削除をスルー
-        self.remove(least_recently_used_key) unless self.keys.include?(key) if size >= @max_size
-
-        @values[key] = {
-            value: value,
-            used_at: nil
+        @mutex.synchronize {
+            # 新規キーの場合は一番古いキーを削除、キー値更新の場合は削除をスルー
+            self.remove(least_recently_used_key) unless self.keys.include?(key) if size >= @max_size
+    
+            @values[key] = {
+                value: value,
+                used_at: nil
+            }
         }
     end
     
